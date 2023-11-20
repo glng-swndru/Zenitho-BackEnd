@@ -33,18 +33,23 @@ func main() {
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
 
+	// Membuat instance handler untuk pengguna
 	userHandler := handler.NewUserHandler(userService)
 
+	// Membuat router menggunakan framework Gin
 	router := gin.Default()
 	api := router.Group("/api/v1")
 
+	// Menetapkan endpoint untuk mendaftarkan pengguna
 	api.POST("/users", userHandler.RegisterUser)
 
+	// Menjalankan server pada port default (8080)
 	router.Run()
 
-	//input dari user
-	//handler, mapping input dari user -> struct input
-	//service : melakukan mapping dari struct input ke struct user
-	//repository
-	//db
+	// Catatan:
+	// - input dari user
+	// - handler, mapping input dari user -> struct input
+	// - service: melakukan mapping dari struct input ke struct user
+	// - repository
+	// - db
 }
