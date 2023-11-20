@@ -1,17 +1,19 @@
 package main
 
 import (
+	"campaignku/handler"
 	"campaignku/user"
 	"log"
 	"os"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
 func main() {
-
+	// Memasukkan detail database ke dalam env agar lebih aman
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
@@ -20,22 +22,29 @@ func main() {
 	dbHost := os.Getenv("DB_HOST")
 	dbName := os.Getenv("DB_NAME")
 
+	// Mengonfigurasi koneksi database menggunakan GORM
 	dsn := dbUser + ":" + dbPassword + "@tcp(" + dbHost + ")/" + dbName + "?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
+	// Membuat instance repository dan service untuk entitas pengguna
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
 
-	userInput := user.RegisterUserInput{}
-	userInput.Name = "TestingGilang"
-	userInput.Email = "contoh@gmail.com"
-	userInput.Occupation = "nganggur"
-	userInput.Password = "password"
+	userHandler := handler.NewUserHandler(userService)
 
-	userService.RegisterUser(userInput)
+	router := gin.Default()
+	api := router.Group("/api/v1")
 
+	api.POST("/users", userHandler.RegisterUser)
+
+	router.Run()
+
+	//input dari user
+	//handler, mapping input dari user -> struct input
+	//service : melakukan mapping dari struct input ke struct user
+	//repository
+	//db
 }
