@@ -1,5 +1,7 @@
 package helper
 
+import "github.com/go-playground/validator/v10"
+
 // Response adalah struktur data yang digunakan untuk mengembalikan respons API standar.
 type Response struct {
 	Meta Meta        `json:"meta"`
@@ -30,4 +32,14 @@ func ApiResponse(message string, code int, status string, data interface{}) Resp
 
 	// Mengembalikan instance Response
 	return response
+}
+
+func FormatValidationError(err error) []string {
+	var errors []string
+
+	for _, e := range err.(validator.ValidationErrors) {
+		errors = append(errors, e.Error())
+	}
+
+	return errors
 }
