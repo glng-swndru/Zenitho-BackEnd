@@ -4,7 +4,6 @@ package main
 import (
 	"campaignku/handler"
 	"campaignku/user"
-	"fmt"
 	"log"
 	"os"
 
@@ -35,19 +34,6 @@ func main() {
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
 
-	// Mencari pengguna berdasarkan email
-	userByEmail, err := userRepository.FindByEmail("gilangswandaru27@gmail.com")
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	// Menampilkan hasil pencarian pengguna
-	if userByEmail.ID == 0 {
-		fmt.Println("User tidak ditemukan")
-	} else {
-		fmt.Println(userByEmail.Name)
-	}
-
 	// Membuat handler untuk pengguna
 	userHandler := handler.NewUserHandler(userService)
 
@@ -57,14 +43,8 @@ func main() {
 
 	// Menetapkan endpoint untuk mendaftarkan pengguna
 	api.POST("/users", userHandler.RegisterUser)
+	api.POST("/sessions", userHandler.Login)
 
 	// Menjalankan server pada port default (8080)
 	router.Run()
-
-	// Catatan:
-	// - input dari user
-	// - handler, mapping input dari user -> struct input
-	// - service: melakukan mapping dari struct input ke struct user
-	// - repository
-	// - db
 }

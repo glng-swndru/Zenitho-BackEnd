@@ -7,3 +7,9 @@ type RegisterUserInput struct {
 	Email      string `json:"email" binding:"required,email"`
 	Password   string `json:"password" binding:"required"`
 }
+
+// LoginInput adalah struktur data yang digunakan sebagai input saat pengguna melakukan login.
+type LoginInput struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}

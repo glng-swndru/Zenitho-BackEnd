@@ -1,10 +1,15 @@
 package user
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"errors"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 // Service merupakan antarmuka yang mendefinisikan operasi-operasi yang dapat dilakukan terhadap entitas pengguna (user).
 type Service interface {
 	RegisterUser(input RegisterUserInput) (User, error)
+	Login(input LoginInput) (User, error)
 }
 
 // service adalah implementasi dari antarmuka Service.
@@ -42,4 +47,30 @@ func (s *service) RegisterUser(input RegisterUserInput) (User, error) {
 
 	// Mengembalikan pengguna baru setelah berhasil mendaftar
 	return newUser, nil
+}
+
+func (s *service) Login(input LoginInput) (User, error) {
+	email := input.Email
+	password := input.Password
+
+	// Mencari pengguna berdasarkan alamat email
+	user, err := s.repository.FindByEmail(email)
+	if err != nil {
+		return User{}, err
+	}
+
+	// Kembalikan error jika tidak ada pengguna dengan alamat email yang diberikan
+	if user.ID == 0 {
+		return User{}, errors.New("No user found on that email")
+	}
+
+	// Memeriksa kesesuaian password menggunakan bcrypt
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	if err != nil {
+		// Kembalikan error jika password tidak cocok
+		return User{}, err
+	}
+
+	// Kembalikan user jika login berhasil
+	return user, nil
 }
