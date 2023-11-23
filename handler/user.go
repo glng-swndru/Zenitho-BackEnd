@@ -22,9 +22,9 @@ func NewUserHandler(userService user.Service) *usersHandler {
 // Metode ini mengambil input dari request, melakukan pemrosesan menggunakan service,
 // dan mengembalikan respons API sesuai hasil pemrosesan.
 func (h *usersHandler) RegisterUser(c *gin.Context) {
-	// Tangkap input dari user
 	var input user.RegisterUserInput
 
+	// Tangkap dan validasi input dari user
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
 		errors := helper.FormatValidationError(err)
@@ -51,4 +51,13 @@ func (h *usersHandler) RegisterUser(c *gin.Context) {
 
 	// Mengembalikan respons API
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *usersHandler) Login(c *gin.Context) {
+	// User memasukkan input (email & password)
+	// Input ditangkap handler
+	// Mapping dari input user ke input struct
+	// Input struct passing service
+	// Di service mencari dengan bantuan repository user dengan email x
+	// Mencocokkan password
 }

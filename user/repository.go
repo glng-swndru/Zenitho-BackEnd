@@ -9,6 +9,7 @@ import (
 // Repository adalah antarmuka yang mendefinisikan operasi-operasi penyimpanan (database) terhadap entitas pengguna (user).
 type Repository interface {
 	Save(user User) (User, error)
+	FindByEmail(email string) (User, error)
 }
 
 // repository adalah implementasi dari antarmuka Repository.
@@ -38,5 +39,19 @@ func (r *repository) Save(user User) (User, error) {
 	}
 
 	// Mengembalikan pengguna setelah berhasil disimpan
+	return user, nil
+}
+
+// FindByEmail digunakan untuk mencari pengguna berdasarkan alamat email.
+// Metode ini mengambil alamat email sebagai parameter, mencari pengguna dengan alamat email yang sesuai,
+// dan mengembalikan instance User jika ditemukan.
+func (r *repository) FindByEmail(email string) (User, error) {
+	var user User
+
+	// Mencari pengguna berdasarkan alamat email
+	err := r.db.Where("email = ?", email).Find(&user).Error
+	if err != nil {
+		return user, nil
+	}
 	return user, nil
 }

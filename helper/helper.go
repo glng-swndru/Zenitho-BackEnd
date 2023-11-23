@@ -34,12 +34,15 @@ func ApiResponse(message string, code int, status string, data interface{}) Resp
 	return response
 }
 
+// FormatValidationError adalah fungsi yang mengonversi error validasi ke dalam bentuk slice string.
 func FormatValidationError(err error) []string {
 	var errors []string
 
+	// Loop melalui setiap error validasi dan menambahkannya ke dalam slice string
 	for _, e := range err.(validator.ValidationErrors) {
 		errors = append(errors, e.Error())
 	}
 
+	// Mengembalikan slice string yang berisi error validasi
 	return errors
 }
