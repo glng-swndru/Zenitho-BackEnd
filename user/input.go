@@ -13,3 +13,8 @@ type LoginInput struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
+
+// CheckEmailInput adalah struktur data yang digunakan sebagai input saat memeriksa ketersediaan alamat email.
+type CheckEmailInput struct {
+	Email string `json:"email" binding:"required,email"`
+}

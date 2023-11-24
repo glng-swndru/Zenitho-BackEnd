@@ -6,10 +6,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Service merupakan antarmuka yang mendefinisikan operasi-operasi yang dapat dilakukan terhadap entitas pengguna (user).
+// Service adalah antarmuka yang mendefinisikan operasi-operasi yang dapat dilakukan terhadap entitas pengguna.
 type Service interface {
 	RegisterUser(input RegisterUserInput) (User, error)
 	Login(input LoginInput) (User, error)
+	IsEmailAvailable(input CheckEmailInput) (bool, error)
 }
 
 // service adalah implementasi dari antarmuka Service.
@@ -49,6 +50,9 @@ func (s *service) RegisterUser(input RegisterUserInput) (User, error) {
 	return newUser, nil
 }
 
+// Login merupakan metode untuk melakukan proses login pengguna.
+// Metode ini mengambil input dari LoginInput, mencari pengguna berdasarkan alamat email,
+// dan memeriksa kesesuaian password menggunakan bcrypt.
 func (s *service) Login(input LoginInput) (User, error) {
 	email := input.Email
 	password := input.Password
@@ -61,7 +65,7 @@ func (s *service) Login(input LoginInput) (User, error) {
 
 	// Kembalikan error jika tidak ada pengguna dengan alamat email yang diberikan
 	if user.ID == 0 {
-		return User{}, errors.New("No user found on that email")
+		return User{}, errors.New("no user found on that email")
 	}
 
 	// Memeriksa kesesuaian password menggunakan bcrypt
@@ -73,4 +77,24 @@ func (s *service) Login(input LoginInput) (User, error) {
 
 	// Kembalikan user jika login berhasil
 	return user, nil
+}
+
+// IsEmailAvailable merupakan metode untuk memeriksa ketersediaan alamat email.
+// Metode ini mengambil input dari CheckEmailInput, mencari pengguna berdasarkan alamat email,
+// dan mengembalikan informasi ketersediaan alamat email.
+func (s *service) IsEmailAvailable(input CheckEmailInput) (bool, error) {
+	email := input.Email
+
+	// Mencari pengguna berdasarkan alamat email
+	user, err := s.repository.FindByEmail(email)
+	if err != nil {
+		return false, err
+	}
+
+	// Kembalikan true jika tidak ada pengguna dengan alamat email yang diberikan
+	if user.ID == 0 {
+		return true, nil
+	}
+
+	return true, nil
 }

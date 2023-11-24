@@ -44,6 +44,7 @@ func main() {
 	// Menetapkan endpoint untuk mendaftarkan pengguna
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/sessions", userHandler.Login)
+	api.POST("/email_checkers", userHandler.CheckEmailAvailability)
 
 	// Menjalankan server pada port default (8080)
 	router.Run()

@@ -19,7 +19,7 @@ func NewUserHandler(userService user.Service) *usersHandler {
 }
 
 // RegisterUser adalah metode-handler untuk mendaftarkan pengguna baru.
-// Metode ini mengambil input dari request, melakukan pemrosesan menggunakan service,
+// Metode ini mengambil input dari request, melakukan validasi, pemrosesan menggunakan service,
 // dan mengembalikan respons API sesuai hasil pemrosesan.
 func (h *usersHandler) RegisterUser(c *gin.Context) {
 	var input user.RegisterUserInput
@@ -53,14 +53,10 @@ func (h *usersHandler) RegisterUser(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// Login adalah metode-handler untuk proses login pengguna.
+// Metode ini mengambil input dari request, melakukan validasi, pemrosesan menggunakan service,
+// dan mengembalikan respons API sesuai hasil pemrosesan.
 func (h *usersHandler) Login(c *gin.Context) {
-	// User memasukkan input (email & password)
-	// Input ditangkap handler
-	// Mapping dari input user ke input struct
-	// Input struct passing service
-	// Di service mencari dengan bantuan repository user dengan email x
-	// Mencocokkan password
-
 	var input user.LoginInput
 
 	err := c.ShouldBindJSON(&input)
@@ -73,6 +69,7 @@ func (h *usersHandler) Login(c *gin.Context) {
 		return
 	}
 
+	// Melakukan login menggunakan service
 	loggedinUser, err := h.userService.Login(input)
 	if err != nil {
 		errorMessage := gin.H{"errors": err.Error()}
@@ -82,9 +79,53 @@ func (h *usersHandler) Login(c *gin.Context) {
 		return
 	}
 
+	// Memformat data pengguna untuk respons API
 	formatter := user.FormatUser(loggedinUser, "tokentokentoken")
 
-	response := helper.ApiResponse("Successfuly loggedin", http.StatusOK, "success", formatter)
+	// Membuat respons API
+	response := helper.ApiResponse("Successfully logged in", http.StatusOK, "success", formatter)
 
+	// Mengembalikan respons API
+	c.JSON(http.StatusOK, response)
+}
+
+// CheckEmailAvailability adalah metode-handler untuk memeriksa ketersediaan alamat email.
+// Metode ini mengambil input dari request, melakukan validasi, pemrosesan menggunakan service,
+// dan mengembalikan respons API sesuai hasil pemrosesan.
+func (h *usersHandler) CheckEmailAvailability(c *gin.Context) {
+	var input user.CheckEmailInput
+
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
+
+		response := helper.ApiResponse("Email checking failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	// Memeriksa ketersediaan alamat email menggunakan service
+	isEmailAvailable, err := h.userService.IsEmailAvailable(input)
+	if err != nil {
+		errorMessage := gin.H{"errors": "Server error"}
+		response := helper.ApiResponse("Email checking failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	// Menyiapkan data untuk respons API
+	data := gin.H{
+		"is_available": isEmailAvailable,
+	}
+
+	// Menyiapkan pesan meta berdasarkan ketersediaan alamat email
+	metaMessage := "Email has been registered"
+	if isEmailAvailable {
+		metaMessage = "Email is available"
+	}
+
+	// Membuat respons API
+	response := helper.ApiResponse(metaMessage, http.StatusOK, "success", data)
 	c.JSON(http.StatusOK, response)
 }
