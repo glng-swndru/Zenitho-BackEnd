@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"campaignku/auth"
 	"campaignku/helper"
 	"campaignku/user"
 	"fmt"
@@ -12,11 +13,12 @@ import (
 // usersHandler adalah struct yang menyediakan metode-handler untuk entitas pengguna (user).
 type usersHandler struct {
 	userService user.Service
+	authService auth.Service
 }
 
 // NewUserHandler digunakan untuk membuat instance baru dari usersHandler dengan service yang diberikan.
-func NewUserHandler(userService user.Service) *usersHandler {
-	return &usersHandler{userService}
+func NewUserHandler(userService user.Service, authService auth.Service) *usersHandler {
+	return &usersHandler{userService, authService}
 }
 
 // RegisterUser adalah metode-handler untuk mendaftarkan pengguna baru.
@@ -38,19 +40,24 @@ func (h *usersHandler) RegisterUser(c *gin.Context) {
 
 	// Mendaftarkan pengguna menggunakan service
 	newUser, err := h.userService.RegisterUser(input)
+
 	if err != nil {
 		response := helper.ApiResponse("Register account failed", http.StatusBadRequest, "success", nil)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	// Memformat data pengguna untuk respons API
-	formatter := user.FormatUser(newUser, "tokentokentoken")
+	token, err := h.authService.GenerateToken(newUser.ID)
+	if err != nil {
+		response := helper.ApiResponse("Register account failed", http.StatusBadRequest, "success", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
 
-	// Membuat respons API
+	formatter := user.FormatUser(newUser, token)
+
 	response := helper.ApiResponse("Account has been registered", http.StatusOK, "success", formatter)
 
-	// Mengembalikan respons API
 	c.JSON(http.StatusOK, response)
 }
 
@@ -80,13 +87,17 @@ func (h *usersHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Memformat data pengguna untuk respons API
-	formatter := user.FormatUser(loggedinUser, "tokentokentoken")
+	token, err := h.authService.GenerateToken(loggedinUser.ID)
+	if err != nil {
+		response := helper.ApiResponse("Login failde", http.StatusBadRequest, "success", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
 
-	// Membuat respons API
+	formatter := user.FormatUser(loggedinUser, token)
+
 	response := helper.ApiResponse("Successfully logged in", http.StatusOK, "success", formatter)
 
-	// Mengembalikan respons API
 	c.JSON(http.StatusOK, response)
 }
 
@@ -115,18 +126,15 @@ func (h *usersHandler) CheckEmailAvailability(c *gin.Context) {
 		return
 	}
 
-	// Menyiapkan data untuk respons API
 	data := gin.H{
 		"is_available": isEmailAvailable,
 	}
 
-	// Menyiapkan pesan meta berdasarkan ketersediaan alamat email
 	metaMessage := "Email has been registered"
 	if isEmailAvailable {
 		metaMessage = "Email is available"
 	}
 
-	// Membuat respons API
 	response := helper.ApiResponse(metaMessage, http.StatusOK, "success", data)
 	c.JSON(http.StatusOK, response)
 }

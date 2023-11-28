@@ -2,8 +2,10 @@
 package main
 
 import (
+	"campaignku/auth"
 	"campaignku/handler"
 	"campaignku/user"
+	"fmt"
 	"log"
 	"os"
 
@@ -33,11 +35,14 @@ func main() {
 	// Membuat repository dan service untuk pengguna
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
+	authService := auth.NewService()
+
+	fmt.Println(authService.GenerateToken(1001))
 
 	userService.SaveAvatar(1, "images/1-profile.png")
 
 	// Membuat handler untuk pengguna
-	userHandler := handler.NewUserHandler(userService)
+	userHandler := handler.NewUserHandler(userService, authService)
 
 	// Membuat router menggunakan framework Gin
 	router := gin.Default()
