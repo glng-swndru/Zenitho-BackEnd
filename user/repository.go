@@ -1,3 +1,4 @@
+// Package user menyediakan representasi data dan operasi penyimpanan untuk entitas pengguna.
 package user
 
 import (
@@ -6,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Repository adalah antarmuka yang mendefinisikan operasi-operasi penyimpanan (database) terhadap entitas pengguna (user).
+// Repository adalah interface yang mendefinisikan operasi-operasi penyimpanan terhadap entitas pengguna.
 type Repository interface {
 	Save(user User) (User, error)
 	FindByEmail(email string) (User, error)
@@ -14,7 +15,7 @@ type Repository interface {
 	Update(user User) (User, error)
 }
 
-// repository adalah implementasi dari antarmuka Repository.
+// repository adalah implementasi dari interface Repository.
 type repository struct {
 	db *gorm.DB
 }
@@ -57,6 +58,9 @@ func (r *repository) FindByEmail(email string) (User, error) {
 	return user, nil
 }
 
+// FindByID digunakan untuk mencari pengguna berdasarkan ID.
+// Metode ini mengambil ID sebagai parameter, mencari pengguna dengan ID yang sesuai,
+// dan mengembalikan instance User jika ditemukan.
 func (r *repository) FindByID(ID int) (User, error) {
 	var user User
 
@@ -67,6 +71,8 @@ func (r *repository) FindByID(ID int) (User, error) {
 	return user, nil
 }
 
+// Update digunakan untuk memperbarui informasi pengguna dalam database.
+// Metode ini mengambil instance User, memperbarui waktu pembaruan, dan menyimpan perubahan ke dalam database.
 func (r *repository) Update(user User) (User, error) {
 	err := r.db.Save(&user).Error
 

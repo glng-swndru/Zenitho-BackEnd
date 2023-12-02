@@ -1,3 +1,4 @@
+// Package handler menyediakan fungsi-fungsi penanganan permintaan HTTP untuk entitas pengguna dalam aplikasi Campaignku.
 package handler
 
 import (
@@ -10,60 +11,56 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// usersHandler adalah struct yang menyediakan metode-handler untuk entitas pengguna (user).
+// usersHandler adalah tipe data yang menyediakan fungsi-fungsi penanganan permintaan terkait pengguna.
 type usersHandler struct {
 	userService user.Service
 	authService auth.Service
 }
 
-// NewUserHandler digunakan untuk membuat instance baru dari usersHandler dengan service yang diberikan.
+// NewUserHandler membuat objek usersHandler baru dengan menyediakan layanan pengguna dan otentikasi yang diperlukan.
 func NewUserHandler(userService user.Service, authService auth.Service) *usersHandler {
 	return &usersHandler{userService, authService}
 }
 
-// RegisterUser adalah metode-handler untuk mendaftarkan pengguna baru.
-// Metode ini mengambil input dari request, melakukan validasi, pemrosesan menggunakan service,
-// dan mengembalikan respons API sesuai hasil pemrosesan.
+// RegisterUser menangani permintaan pendaftaran pengguna baru.
 func (h *usersHandler) RegisterUser(c *gin.Context) {
 	var input user.RegisterUserInput
 
-	// Tangkap dan validasi input dari user
+	// Ambil dan validasi input dari pengguna
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
 		errors := helper.FormatValidationError(err)
 		errorMessage := gin.H{"errors": errors}
 
-		response := helper.ApiResponse("Register account failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		response := helper.ApiResponse("Gagal mendaftarkan akun", http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
 
-	// Mendaftarkan pengguna menggunakan service
+	// Daftarkan pengguna menggunakan layanan
 	newUser, err := h.userService.RegisterUser(input)
 
 	if err != nil {
-		response := helper.ApiResponse("Register account failed", http.StatusBadRequest, "success", nil)
+		response := helper.ApiResponse("Gagal mendaftarkan akun", http.StatusBadRequest, "success", nil)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	token, err := h.authService.GenerateToken(newUser.ID)
 	if err != nil {
-		response := helper.ApiResponse("Register account failed", http.StatusBadRequest, "success", nil)
+		response := helper.ApiResponse("Gagal mendaftarkan akun", http.StatusBadRequest, "success", nil)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	formatter := user.FormatUser(newUser, token)
 
-	response := helper.ApiResponse("Account has been registered", http.StatusOK, "success", formatter)
+	response := helper.ApiResponse("Akun berhasil didaftarkan", http.StatusOK, "success", formatter)
 
 	c.JSON(http.StatusOK, response)
 }
 
-// Login adalah metode-handler untuk proses login pengguna.
-// Metode ini mengambil input dari request, melakukan validasi, pemrosesan menggunakan service,
-// dan mengembalikan respons API sesuai hasil pemrosesan.
+// Login menangani permintaan login pengguna.
 func (h *usersHandler) Login(c *gin.Context) {
 	var input user.LoginInput
 
@@ -72,38 +69,36 @@ func (h *usersHandler) Login(c *gin.Context) {
 		errors := helper.FormatValidationError(err)
 		errorMessage := gin.H{"errors": errors}
 
-		response := helper.ApiResponse("Login failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		response := helper.ApiResponse("Login gagal", http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
 
-	// Melakukan login menggunakan service
+	// Lakukan login menggunakan layanan
 	loggedinUser, err := h.userService.Login(input)
 	if err != nil {
 		errorMessage := gin.H{"errors": err.Error()}
 
-		response := helper.ApiResponse("Login failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		response := helper.ApiResponse("Login gagal", http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
 
 	token, err := h.authService.GenerateToken(loggedinUser.ID)
 	if err != nil {
-		response := helper.ApiResponse("Login failde", http.StatusBadRequest, "success", nil)
+		response := helper.ApiResponse("Login gagal", http.StatusBadRequest, "success", nil)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	formatter := user.FormatUser(loggedinUser, token)
 
-	response := helper.ApiResponse("Successfully logged in", http.StatusOK, "success", formatter)
+	response := helper.ApiResponse("Berhasil login", http.StatusOK, "success", formatter)
 
 	c.JSON(http.StatusOK, response)
 }
 
-// CheckEmailAvailability adalah metode-handler untuk memeriksa ketersediaan alamat email.
-// Metode ini mengambil input dari request, melakukan validasi, pemrosesan menggunakan service,
-// dan mengembalikan respons API sesuai hasil pemrosesan.
+// CheckEmailAvailability menangani permintaan pengecekan ketersediaan alamat email.
 func (h *usersHandler) CheckEmailAvailability(c *gin.Context) {
 	var input user.CheckEmailInput
 
@@ -112,16 +107,16 @@ func (h *usersHandler) CheckEmailAvailability(c *gin.Context) {
 		errors := helper.FormatValidationError(err)
 		errorMessage := gin.H{"errors": errors}
 
-		response := helper.ApiResponse("Email checking failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		response := helper.ApiResponse("Pengecekan email gagal", http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
 
-	// Memeriksa ketersediaan alamat email menggunakan service
+	// Periksa ketersediaan alamat email menggunakan layanan
 	isEmailAvailable, err := h.userService.IsEmailAvailable(input)
 	if err != nil {
 		errorMessage := gin.H{"errors": "Server error"}
-		response := helper.ApiResponse("Email checking failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		response := helper.ApiResponse("Pengecekan email gagal", http.StatusUnprocessableEntity, "error", errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
@@ -130,20 +125,21 @@ func (h *usersHandler) CheckEmailAvailability(c *gin.Context) {
 		"is_available": isEmailAvailable,
 	}
 
-	metaMessage := "Email has been registered"
+	metaMessage := "Email telah terdaftar"
 	if isEmailAvailable {
-		metaMessage = "Email is available"
+		metaMessage = "Email tersedia"
 	}
 
 	response := helper.ApiResponse(metaMessage, http.StatusOK, "success", data)
 	c.JSON(http.StatusOK, response)
 }
 
+// UploadAvatar menangani permintaan pengunggahan avatar pengguna.
 func (h *usersHandler) UploadAvatar(c *gin.Context) {
 	file, err := c.FormFile("avatar")
 	if err != nil {
 		data := gin.H{"is_uploaded": false}
-		response := helper.ApiResponse("Failed to upload avatar image", http.StatusBadRequest, "error", data)
+		response := helper.ApiResponse("Gagal mengunggah gambar avatar", http.StatusBadRequest, "error", data)
 
 		c.JSON(http.StatusBadRequest, response)
 		return
@@ -156,7 +152,7 @@ func (h *usersHandler) UploadAvatar(c *gin.Context) {
 	err = c.SaveUploadedFile(file, path)
 	if err != nil {
 		data := gin.H{"is_uploaded": false}
-		response := helper.ApiResponse("Failed to upload avatar image", http.StatusBadRequest, "error", data)
+		response := helper.ApiResponse("Gagal mengunggah gambar avatar", http.StatusBadRequest, "error", data)
 
 		c.JSON(http.StatusBadRequest, response)
 		return
@@ -165,14 +161,14 @@ func (h *usersHandler) UploadAvatar(c *gin.Context) {
 	_, err = h.userService.SaveAvatar(userID, path)
 	if err != nil {
 		data := gin.H{"is_uploaded": false}
-		response := helper.ApiResponse("Failed to upload avatar image", http.StatusBadRequest, "error", data)
+		response := helper.ApiResponse("Gagal mengunggah gambar avatar", http.StatusBadRequest, "error", data)
 
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	data := gin.H{"is_uploaded": true}
-	response := helper.ApiResponse("Avatar successfuly uploaded", http.StatusOK, "success", data)
+	response := helper.ApiResponse("Avatar berhasil diunggah", http.StatusOK, "success", data)
 
 	c.JSON(http.StatusOK, response)
 }

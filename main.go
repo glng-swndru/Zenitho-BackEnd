@@ -1,13 +1,17 @@
-// Package main adalah entry point utama dari aplikasi Campaignku.
+// Package main adalah titik masuk utama dari aplikasi Campaignku.
 package main
 
 import (
 	"campaignku/auth"
 	"campaignku/handler"
+	"campaignku/helper"
 	"campaignku/user"
 	"log"
+	"net/http"
 	"os"
+	"strings"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
@@ -15,12 +19,12 @@ import (
 )
 
 func main() {
-	// Konfigurasi database dari variabel lingkungan (.env)
+	// Load konfigurasi database dari variabel lingkungan (.env)
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	// Menginisialisasi koneksi database menggunakan GORM
+	// Inisialisasi koneksi database menggunakan GORM
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbHost := os.Getenv("DB_HOST")
@@ -31,24 +35,78 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	// Membuat repository dan service untuk pengguna
+	// Buat repository dan service untuk pengguna
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
 	authService := auth.NewService()
 
-	// Membuat handler untuk pengguna
+	// Buat handler untuk pengguna
 	userHandler := handler.NewUserHandler(userService, authService)
 
-	// Membuat router menggunakan framework Gin
+	// Buat router menggunakan framework Gin
 	router := gin.Default()
 	api := router.Group("/api/v1")
 
-	// Menetapkan endpoint untuk mendaftarkan pengguna
+	// Tetapkan endpoint untuk pendaftaran pengguna, login, pengecekan ketersediaan email, dan unggah avatar
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/sessions", userHandler.Login)
 	api.POST("/email_checkers", userHandler.CheckEmailAvailability)
-	api.POST("/avatars", userHandler.UploadAvatar)
+	api.POST("/avatars", authMiddleware(authService, userService), userHandler.UploadAvatar)
 
-	// Menjalankan server pada port default (8080)
+	// Jalankan server pada port default (8080)
 	router.Run()
+}
+
+// authMiddleware adalah fungsi middleware untuk otentikasi.
+func authMiddleware(authService auth.Service, userService user.Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Dapatkan header Authorization dari permintaan
+		authHeader := c.GetHeader("Authorization")
+
+		// Periksa apakah header mengandung token Bearer
+		if !strings.Contains(authHeader, "Bearer") {
+			response := helper.ApiResponse("Tidak diizinkan", http.StatusUnauthorized, "error", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+
+		// Ekstrak token dari header
+		tokenString := ""
+		arrayToken := strings.Split(authHeader, " ")
+		if len(arrayToken) == 2 {
+			tokenString = arrayToken[1]
+		}
+
+		// Validasi token
+		token, err := authService.ValidateToken(tokenString)
+		if err != nil {
+			response := helper.ApiResponse("Tidak diizinkan", http.StatusUnauthorized, "error", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+
+		// Ekstrak klaim dari token
+		claim, ok := token.Claims.(jwt.MapClaims)
+
+		// Periksa apakah klaim valid
+		if !ok || !token.Valid {
+			response := helper.ApiResponse("Tidak diizinkan", http.StatusUnauthorized, "error", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+
+		// Ekstrak ID pengguna dari klaim
+		userID := int(claim["user_id"].(float64))
+
+		// Dapatkan informasi pengguna dari layanan
+		user, err := userService.GetUserByID(userID)
+		if err != nil {
+			response := helper.ApiResponse("Tidak diizinkan", http.StatusUnauthorized, "error", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+
+		// Tetapkan kunci "currentUser" di konteks dengan informasi pengguna
+		c.Set("currentUser", user)
+	}
 }

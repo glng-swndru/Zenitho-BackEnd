@@ -1,3 +1,4 @@
+// Package user menyediakan representasi data dan operasi layanan untuk entitas pengguna.
 package user
 
 import (
@@ -6,7 +7,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Service adalah antarmuka yang mendefinisikan operasi-operasi yang dapat dilakukan terhadap entitas pengguna.
+// Service adalah interface yang menentukan operasi-operasi yang dapat dilakukan pada entitas pengguna.
 type Service interface {
 	RegisterUser(input RegisterUserInput) (User, error)
 	Login(input LoginInput) (User, error)
@@ -15,7 +16,7 @@ type Service interface {
 	GetUserByID(ID int) (User, error)
 }
 
-// service adalah implementasi dari antarmuka Service.
+// service adalah implementasi dari interface Service.
 type service struct {
 	repository Repository
 }
@@ -25,8 +26,8 @@ func NewService(repository Repository) *service {
 	return &service{repository}
 }
 
-// RegisterUser merupakan metode untuk mendaftarkan pengguna baru.
-// Metode ini mengambil input dari RegisterUserInput, menghasilkan User baru, dan menyimpannya ke repository.
+// RegisterUser adalah metode untuk mendaftarkan pengguna baru.
+// Metode ini mengambil input dari RegisterUserInput, membuat User baru, dan menyimpannya ke repository.
 func (s *service) RegisterUser(input RegisterUserInput) (User, error) {
 	// Membuat instance User baru
 	user := User{}
@@ -52,7 +53,7 @@ func (s *service) RegisterUser(input RegisterUserInput) (User, error) {
 	return newUser, nil
 }
 
-// Login merupakan metode untuk melakukan proses login pengguna.
+// Login adalah metode untuk proses login pengguna.
 // Metode ini mengambil input dari LoginInput, mencari pengguna berdasarkan alamat email,
 // dan memeriksa kesesuaian password menggunakan bcrypt.
 func (s *service) Login(input LoginInput) (User, error) {
@@ -67,7 +68,7 @@ func (s *service) Login(input LoginInput) (User, error) {
 
 	// Kembalikan error jika tidak ada pengguna dengan alamat email yang diberikan
 	if user.ID == 0 {
-		return User{}, errors.New("no user found on that email")
+		return User{}, errors.New("tidak ada pengguna dengan email tersebut")
 	}
 
 	// Memeriksa kesesuaian password menggunakan bcrypt
@@ -77,11 +78,11 @@ func (s *service) Login(input LoginInput) (User, error) {
 		return User{}, err
 	}
 
-	// Kembalikan user jika login berhasil
+	// Kembalikan pengguna jika login berhasil
 	return user, nil
 }
 
-// IsEmailAvailable merupakan metode untuk memeriksa ketersediaan alamat email.
+// IsEmailAvailable adalah metode untuk memeriksa ketersediaan alamat email.
 // Metode ini mengambil input dari CheckEmailInput, mencari pengguna berdasarkan alamat email,
 // dan mengembalikan informasi ketersediaan alamat email.
 func (s *service) IsEmailAvailable(input CheckEmailInput) (bool, error) {
@@ -101,6 +102,9 @@ func (s *service) IsEmailAvailable(input CheckEmailInput) (bool, error) {
 	return true, nil
 }
 
+// SaveAvatar adalah metode untuk menyimpan lokasi file avatar pengguna.
+// Metode ini mengambil ID pengguna dan lokasi file sebagai parameter, memperbarui lokasi file avatar pengguna,
+// dan menyimpan perubahan ke repository.
 func (s *service) SaveAvatar(ID int, fileLocation string) (User, error) {
 	user, err := s.repository.FindByID(ID)
 	if err != nil {
@@ -117,6 +121,9 @@ func (s *service) SaveAvatar(ID int, fileLocation string) (User, error) {
 	return updateUser, nil
 }
 
+// GetUserByID adalah metode untuk mendapatkan pengguna berdasarkan ID pengguna.
+// Metode ini mengambil ID pengguna sebagai parameter, mencari pengguna dengan ID yang sesuai,
+// dan mengembalikan instance User jika ditemukan.
 func (s *service) GetUserByID(ID int) (User, error) {
 	user, err := s.repository.FindByID(ID)
 	if err != nil {
@@ -124,7 +131,7 @@ func (s *service) GetUserByID(ID int) (User, error) {
 	}
 
 	if user.ID == 0 {
-		return user, errors.New("no user found with the email")
+		return user, errors.New("tidak ada pengguna dengan ID tersebut")
 	}
 	return user, nil
 }
