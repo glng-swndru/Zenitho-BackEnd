@@ -85,17 +85,17 @@ func authMiddleware(authService auth.Service, userService user.Service) gin.Hand
 			return
 		}
 
-		// Ekstrak klaim dari token
+		// Ekstrak claim dari token
 		claim, ok := token.Claims.(jwt.MapClaims)
 
-		// Periksa apakah klaim valid
+		// Periksa apakah claim valid
 		if !ok || !token.Valid {
 			response := helper.ApiResponse("Tidak diizinkan", http.StatusUnauthorized, "error", nil)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 
-		// Ekstrak ID pengguna dari klaim
+		// Ekstrak ID pengguna dari claim
 		userID := int(claim["user_id"].(float64))
 
 		// Dapatkan informasi pengguna dari layanan
