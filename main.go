@@ -3,9 +3,11 @@ package main
 
 import (
 	"campaignku/auth"
+	"campaignku/campaign"
 	"campaignku/handler"
 	"campaignku/helper"
 	"campaignku/user"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -37,6 +39,19 @@ func main() {
 
 	// Buat repository dan service untuk pengguna
 	userRepository := user.NewRepository(db)
+	campaignRepository := campaign.NewRepository(db)
+
+	campaigns, err := campaignRepository.FindAll()
+
+	fmt.Println("debug")
+	fmt.Println("debug")
+	fmt.Println("debug")
+	fmt.Println(len(campaigns))
+
+	for _, campaign := range campaigns {
+		fmt.Println(campaign.Name)
+	}
+
 	userService := user.NewService(userRepository)
 	authService := auth.NewService()
 
