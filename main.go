@@ -7,7 +7,6 @@ import (
 	"campaignku/handler"
 	"campaignku/helper"
 	"campaignku/user"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -37,29 +36,29 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	// Buat repository dan service untuk pengguna
+	// untuk repository
 	userRepository := user.NewRepository(db)
 	campaignRepository := campaign.NewRepository(db)
 
+	// untuk service
 	userService := user.NewService(userRepository)
 	campaignService := campaign.NewService(campaignRepository)
 	authService := auth.NewService()
 
-	campaigns, _ := campaignService.FindCampaigns(1)
-	fmt.Println(campaigns)
-
-	// Buat handler untuk pengguna
+	// untuk handler
 	userHandler := handler.NewUserHandler(userService, authService)
+	campaignHandler := handler.NewCampaignHandler(campaignService)
 
 	// Buat router menggunakan framework Gin
 	router := gin.Default()
 	api := router.Group("/api/v1")
 
-	// Tetapkan endpoint untuk pendaftaran pengguna, login, pengecekan ketersediaan email, dan unggah avatar
+	// untuk endpoint
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/sessions", userHandler.Login)
 	api.POST("/email_checkers", userHandler.CheckEmailAvailability)
 	api.POST("/avatars", authMiddleware(authService, userService), userHandler.UploadAvatar)
+	api.GET("/campaigns", campaignHandler.GetCampaigns)
 
 	// Jalankan server pada port default (8080)
 	router.Run()
