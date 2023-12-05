@@ -41,19 +41,12 @@ func main() {
 	userRepository := user.NewRepository(db)
 	campaignRepository := campaign.NewRepository(db)
 
-	campaigns, err := campaignRepository.FindAll()
-
-	fmt.Println("debug")
-	fmt.Println("debug")
-	fmt.Println("debug")
-	fmt.Println(len(campaigns))
-
-	for _, campaign := range campaigns {
-		fmt.Println(campaign.Name)
-	}
-
 	userService := user.NewService(userRepository)
+	campaignService := campaign.NewService(campaignRepository)
 	authService := auth.NewService()
+
+	campaigns, _ := campaignService.FindCampaigns(1)
+	fmt.Println(campaigns)
 
 	// Buat handler untuk pengguna
 	userHandler := handler.NewUserHandler(userService, authService)
