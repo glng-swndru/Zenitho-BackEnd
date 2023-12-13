@@ -6,60 +6,54 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-// Service mendefinisikan kontrak untuk layanan otentikasi.
+// Service mendefinisikan 'kontrak' kerja untuk layanan otentikasi.
 type Service interface {
-	// GenerateToken menghasilkan JWT untuk userID yang diberikan.
-	GenerateToken(userID int) (string, error)
-
-	// ValidateToken memvalidasi JWT yang diberikan.
-	ValidateToken(token string) (*jwt.Token, error)
+	GenerateToken(userID int) (string, error)       // Fungsi buat bikin token JWT dari userID.
+	ValidateToken(token string) (*jwt.Token, error) // Fungsi buat cek token JWT itu valid apa enggak.
 }
 
-// jwtService mengimplementasikan antarmuka Service untuk otentikasi berbasis JWT.
+// jwtService, implementasi dari Service, spesial buat JWT.
 type jwtService struct {
+	// Nggak ada field khusus di sini.
 }
 
-// SECRET_KEY menyimpan kunci rahasia yang digunakan untuk penandatanganan JWT.
+// SECRET_KEY, kunci rahasia buat tanda tangan digital di JWT.
 var SECRET_KEY = []byte("cob4_s3cr3tk3y")
 
-// NewService membuat instance baru dari jwtService.
+// NewService buat instance baru jwtService.
 func NewService() *jwtService {
-	return &jwtService{}
+	return &jwtService{} // Kembalikan struct jwtService yang baru dibuat.
 }
 
-// GenerateToken menghasilkan JWT untuk userID yang diberikan.
+// GenerateToken bikin token JWT dari userID.
 func (s *jwtService) GenerateToken(userID int) (string, error) {
-	// Buat klaim JWT dengan user_id sebagai pasangan key-value.
-	claim := jwt.MapClaims{}
-	claim["user_id"] = userID
+	claim := jwt.MapClaims{}  // Bikin 'klaim' buat token.
+	claim["user_id"] = userID // Masukin userID ke dalam klaim.
 
-	// Buat JWT baru dengan metode penandatanganan HS256 dan klaim tersebut.
+	// Bikin token baru dengan metode HS256, masukin klaim tadi.
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
 
-	// Tandatangani token dengan SECRET_KEY.
-	signedToken, err := token.SignedString(SECRET_KEY)
+	signedToken, err := token.SignedString(SECRET_KEY) // Tanda tangani token pake SECRET_KEY.
 	if err != nil {
-		return signedToken, err
+		return signedToken, err // Kalo ada error, balikin errornya.
 	}
-	return signedToken, nil
+	return signedToken, nil // Kalo sukses, balikin token yang udah ditanda tangani.
 }
 
-// ValidateToken memvalidasi JWT yang diberikan.
+// ValidateToken cek apakah token JWT yang diberikan itu valid.
 func (s *jwtService) ValidateToken(encodedtoken string) (*jwt.Token, error) {
-	// Parse token terenkripsi dengan fungsi validasi kustom.
+	// Parse token, pake fungsi kustom buat validasi.
 	token, err := jwt.Parse(encodedtoken, func(token *jwt.Token) (interface{}, error) {
-		// Periksa apakah metode penandatanganan adalah HMAC (HS256).
-		_, ok := token.Method.(*jwt.SigningMethodHMAC)
+		_, ok := token.Method.(*jwt.SigningMethodHMAC) // Cek metodenya HMAC (HS256) apa enggak.
 
 		if !ok {
-			return nil, errors.New("token tidak valid")
+			return nil, errors.New("token tidak valid") // Kalo bukan, bilang tokennya nggak valid.
 		}
-		// Kembalikan SECRET_KEY untuk validasi.
-		return []byte(SECRET_KEY), nil
+		return []byte(SECRET_KEY), nil // Kalo iya, balikin SECRET_KEY buat validasi.
 	})
 
 	if err != nil {
-		return token, err
+		return token, err // Kalo parsing error, balikin errornya.
 	}
-	return token, nil
+	return token, nil // Kalo sukses, balikin token yang udah divalidasi.
 }

@@ -21,5 +21,5 @@ func FormatUser(user User, token string) UserFormatter {
 	}
 
 	// Mengembalikan instance UserFormatter yang telah diformat.
-	return formatter
+	return formatter // Kembalikan data pengguna yang telah diformat.
 }

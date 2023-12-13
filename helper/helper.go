@@ -4,45 +4,41 @@ import "github.com/go-playground/validator/v10"
 
 // Response adalah struktur data yang digunakan untuk mengembalikan respons API standar.
 type Response struct {
-	Meta Meta        `json:"meta"`
-	Data interface{} `json:"data"`
+	Meta Meta        `json:"meta"` // Bagian meta dari respons, berisi info umum seperti pesan, kode, dan status.
+	Data interface{} `json:"data"` // Bagian data dari respons, bisa berisi apa saja.
 }
 
 // Meta adalah struktur data yang menyimpan informasi meta-data untuk respons API.
 type Meta struct {
-	Message string `json:"message"`
-	Code    int    `json:"code"`
-	Status  string `json:"status"`
+	Message string `json:"message"` // Pesan dalam respons, seperti "Berhasil memuat data".
+	Code    int    `json:"code"`    // Kode status HTTP, seperti 200, 400, 404, dll.
+	Status  string `json:"status"`  // Status operasi, biasanya "success" atau "error".
 }
 
 // ApiResponse adalah fungsi yang menghasilkan instance Response berdasarkan parameter yang diberikan.
 func ApiResponse(message string, code int, status string, data interface{}) Response {
-	// Membuat instance Meta berdasarkan parameter yang diberikan
 	meta := Meta{
-		Message: message,
-		Code:    code,
-		Status:  status,
+		Message: message, // Set pesan.
+		Code:    code,    // Set kode status HTTP.
+		Status:  status,  // Set status operasi.
 	}
 
-	// Membuat instance Response dengan Meta dan Data yang telah ditentukan
 	response := Response{
-		Meta: meta,
-		Data: data,
+		Meta: meta, // Set bagian meta dari respons.
+		Data: data, // Set bagian data dari respons.
 	}
 
-	// Mengembalikan instance Response
-	return response
+	return response // Kembalikan respons yang sudah dibuat.
 }
 
 // FormatValidationError adalah fungsi yang mengonversi error validasi ke dalam bentuk slice string.
 func FormatValidationError(err error) []string {
-	var errors []string
+	var errors []string // Siapin slice untuk tampung pesan error.
 
-	// Loop melalui setiap error validasi dan menambahkannya ke dalam slice string
+	// Loop melalui setiap error validasi.
 	for _, e := range err.(validator.ValidationErrors) {
-		errors = append(errors, e.Error())
+		errors = append(errors, e.Error()) // Tambahkan pesan error ke slice.
 	}
 
-	// Mengembalikan slice string yang berisi error validasi
-	return errors
+	return errors // Kembalikan slice berisi pesan error.
 }
